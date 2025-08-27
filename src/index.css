@@ -1,0 +1,28 @@
+/* Temel reset ve font ayarları */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background-color: #0f172a; /* slate-900 */
+  color: #e5e7eb; /* gray-200 */
+}
+.card {
+  position: relative;
+}
+.delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: red;
+}
