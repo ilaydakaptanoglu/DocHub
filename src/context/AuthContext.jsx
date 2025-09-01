@@ -11,6 +11,7 @@ export function AuthProvider({ children }) {
   });
   const [loading, setLoading] = useState(false);
 
+  // LocalStorage güncelle
   useEffect(() => {
     if (token) localStorage.setItem("token", token);
     else localStorage.removeItem("token");
@@ -21,36 +22,33 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem("user");
   }, [user]);
 
+  // Login
   const login = async (username, password) => {
     setLoading(true);
     try {
-      const { token, user } = await authApi.login({ username, password });
-      setToken(token);
-      setUser(user);
-      return user;
+      const res = await authApi.login({ Username: username, Password: password });
+      if (!res.token) throw new Error("Token missing from server response");
+      setToken(res.token);
+      setUser(res.user);
+      return res.user;
     } finally {
       setLoading(false);
     }
   };
 
- const register = async (username, email, password, confirmPassword, firstName = "", lastName = "") => {
-  setLoading(true);
-  try {
-    const { token, user } = await authApi.register({
-      Username: username,
-      Email: email,
-      Password: password,
-      ConfirmPassword: confirmPassword,
-      FirstName: firstName,
-      LastName: lastName
-    });
-    setToken(token);
-    setUser(user);
-    return user;
-  } finally {
-    setLoading(false);
-  }
-};
+  // Register
+  const register = async (data) => {
+    setLoading(true);
+    try {
+      const res = await authApi.register(data); // { token, user }
+      if (!res.token) throw new Error("Token missing from server response");
+      setToken(res.token);
+      setUser(res.user);
+      return res.user;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const logout = () => {
     setToken(null);
@@ -65,12 +63,10 @@ export function AuthProvider({ children }) {
     register,
     logout,
     isAuthenticated: !!token,
-    isAdmin: user?.roles?.includes("admin"),
+    isAdmin: user?.Roles?.includes("admin"),
   }), [token, user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);
-
-
