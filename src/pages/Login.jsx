@@ -12,9 +12,12 @@ export default function Login() {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
+      // DTO ile uyumlu olarak login
       const user = await login(username.trim(), password);
+
       if (user) {
-        // Admin ise her yere erişim, user ise kendi dosyalar
+        // Admin ise tüm dosyalara erişim, user ise kendi dosyaları
+        // Bu kontrol dosya fetch kısmında yapılacak
         nav("/files");
       }
     } catch (err) {
@@ -28,11 +31,22 @@ export default function Login() {
       <form onSubmit={onSubmit} className="form">
         <label className="label">
           Kullanıcı Adı
-          <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} required />
+          <input
+            className="input"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
         </label>
         <label className="label">
           Şifre
-          <input className="input" type="password" value={password} onChange={(e) => setPass(e.target.value)} required />
+          <input
+            className="input"
+            type="password"
+            value={password}
+            onChange={(e) => setPass(e.target.value)}
+            required
+          />
         </label>
         <button className="btn" type="submit" disabled={loading}>
           {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
