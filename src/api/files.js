@@ -3,8 +3,7 @@ import { authFetch } from "./index.js";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const getFolderChildren = async (folderId) => {
-  let parsedFolderId = folderId;
-  if (folderId === "root" || folderId === "null") parsedFolderId = null;
+  const parsedFolderId = folderId === "root" || folderId === "null" ? null : folderId;
   const res = await authFetch(`${BASE_URL}/files?folderId=${parsedFolderId}`);
   if (!res.ok) throw new Error(`Klasör içerikleri alınamadı: ${await res.text()}`);
   return res.json();
@@ -54,7 +53,7 @@ export const createFolder = async (parentId, name) => {
 
 export const getFolders = async (parentId = null) => {
   const params = new URLSearchParams();
-  if (parentId !== null && parentId !== undefined) params.append("parentId", parentId);
+  if (parentId !== null && parentId !== "root") params.append("parentId", parentId);
   const res = await authFetch(`${BASE_URL}/folders?${params}`);
   if (!res.ok) throw new Error(`Klasörler alınamadı: ${await res.text()}`);
   return res.json();
