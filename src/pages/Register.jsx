@@ -16,14 +16,14 @@ export default function Register() {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      await register({
-        Username: username.trim(),
-        Email: email.trim(),
-        Password: password,
-        ConfirmPassword: confirmPassword,
-        FirstName: firstName.trim(),
-        LastName: lastName.trim()
-      });
+      await register(
+        username.trim(),
+        email.trim(),
+        password,
+        confirmPassword,
+        firstName.trim(),
+        lastName.trim()
+      );
       nav("/files");
     } catch (err) {
       alert("Kayıt başarısız: " + (err?.message || "Hata"));
@@ -36,29 +36,28 @@ export default function Register() {
       <form onSubmit={onSubmit} className="form">
         <label className="label">
           Kullanıcı Adı
-          <input className="input" value={username} onChange={e => setUsername(e.target.value)} required />
+          <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} required />
         </label>
         <label className="label">
           E-posta
-          <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-        </label>
-        <label className="label">
-          Ad
-          <input className="input" value={firstName} onChange={e => setFirstName(e.target.value)} />
-        </label>
-        <label className="label">
-          Soyad
-          <input className="input" value={lastName} onChange={e => setLastName(e.target.value)} />
+          <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </label>
         <label className="label">
           Şifre
-          <input className="input" type="password" value={password} onChange={e => setPass(e.target.value)} required />
+          <input className="input" type="password" value={password} onChange={(e) => setPass(e.target.value)} required />
         </label>
         <label className="label">
           Şifreyi Onayla
-          <input className="input" type="password" value={confirmPassword} onChange={e => setConfirm(e.target.value)} required />
+          <input className="input" type="password" value={confirmPassword} onChange={(e) => setConfirm(e.target.value)} required />
         </label>
-
+        <label className="label">
+          Ad
+          <input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+        </label>
+        <label className="label">
+          Soyad
+          <input className="input" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+        </label>
         <button className="btn" type="submit" disabled={loading}>
           {loading ? "Kayıt olunuyor..." : "Kayıt Ol"}
         </button>
