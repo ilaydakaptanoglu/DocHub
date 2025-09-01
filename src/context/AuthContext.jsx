@@ -33,17 +33,17 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async ({ username, email, password, confirmPassword }) => {
-    setLoading(true);
-    try {
-      const { token, user } = await authApi.register({ username, email, password, confirmPassword });
-      setToken(token);
-      setUser(user);
-      return user;
-    } finally {
-      setLoading(false);
-    }
-  };
+ const register = async (username, email, password, confirmPassword) => {
+  setLoading(true);
+  try {
+    const { token, user } = await authApi.register(username, email, password, confirmPassword);
+    setToken(token);
+    setUser(user);
+    return user;
+  } finally {
+    setLoading(false);
+  }
+};
 
   const logout = () => {
     setToken(null);
@@ -65,3 +65,4 @@ export function AuthProvider({ children }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
+
