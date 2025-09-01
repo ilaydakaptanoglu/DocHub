@@ -5,16 +5,18 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function Register() {
   const { register, loading } = useAuth();
   const nav = useNavigate();
-  
+
   const [username, setUsername] = useState("");
   const [email, setEmail]       = useState("");
   const [password, setPass]     = useState("");
   const [confirmPassword, setConfirm] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      await register(username.trim(), email.trim(), password, confirmPassword);
+      await register(username.trim(), email.trim(), password, confirmPassword, firstName.trim(), lastName.trim());
       nav("/files");
     } catch (err) {
       alert("Kayıt başarısız: " + (err?.message || "Hata"));
@@ -40,6 +42,14 @@ export default function Register() {
         <label className="label">
           Şifreyi Onayla
           <input className="input" type="password" value={confirmPassword} onChange={(e) => setConfirm(e.target.value)} required />
+        </label>
+        <label className="label">
+          Ad
+          <input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+        </label>
+        <label className="label">
+          Soyad
+          <input className="input" value={lastName} onChange={(e) => setLastName(e.target.value)} />
         </label>
         <button className="btn" type="submit" disabled={loading}>
           {loading ? "Kayıt olunuyor..." : "Kayıt Ol"}
