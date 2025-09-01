@@ -5,23 +5,32 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function Register() {
   const { register, loading } = useAuth();
   const nav = useNavigate();
-  const [name, setName]       = useState("");
-  const [email, setEmail]     = useState("");
-  const [password, setPass]   = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState(""); // Yeni alan
+  const [error, setError] = useState("");
 
   const onSubmit = async (e) => {
     e.preventDefault();
+
+    if (password !== confirmPass) { // Frontend validation
+      setError("Parolalar eşleşmiyor!");
+      return;
+    }
+
     try {
-      await register(name.trim(), email.trim(), password);
+      await register(name.trim(), email.trim(), password, confirmPass); // ConfirmPassword gönderiliyor
       nav("/files");
     } catch (err) {
-      alert("Kayıt başarısız: " + (err?.message || "Hata"));
+      setError("Kayıt başarısız: " + (err?.message || "Hata"));
     }
   };
 
   return (
     <div className="panel" style={{ maxWidth: 420, margin: "40px auto" }}>
       <h2 style={{ marginBottom: 12 }}>Kayıt Ol</h2>
+      {error && <div style={{ color: "red", marginBottom: 8 }}>{error}</div>}
       <form onSubmit={onSubmit} className="form">
         <label className="label">
           Ad Soyad
@@ -37,6 +46,11 @@ export default function Register() {
           Şifre
           <input className="input" type="password" value={password}
                  onChange={(e) => setPass(e.target.value)} required />
+        </label>
+        <label className="label">
+          Şifreyi Onayla
+          <input className="input" type="password" value={confirmPass}
+                 onChange={(e) => setConfirmPass(e.target.value)} required />
         </label>
         <button className="btn" type="submit" disabled={loading}>
           {loading ? "Kayıt olunuyor..." : "Kayıt Ol"}
