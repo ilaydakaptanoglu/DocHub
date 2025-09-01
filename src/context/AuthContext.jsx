@@ -67,7 +67,7 @@ export function AuthProvider({ children }) {
     register,
     logout,
     isAuthenticated: !!token,
-    isAdmin: user?.roles?.includes("admin"),
+    isAdmin: user?.Roles?.includes("Admin"),
   }), [token, user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

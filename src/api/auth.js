@@ -2,7 +2,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 // Login fonksiyonu
 export const login = async (username, password) => {
-  const res = await fetch(`${API_BASE}/auth/login`, {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ Username: username, Password: password }) // DTO ile uyumlu
@@ -19,7 +19,7 @@ export const login = async (username, password) => {
 // Register fonksiyonu
 export const register = async (data) => {
   // data = { Username, Email, Password, ConfirmPassword, FirstName?, LastName? }
-  const res = await fetch(`${API_BASE}/auth/register`, {
+  const res = await fetch(`${API_BASE}/api/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data) // DTO formatına uygun
@@ -35,7 +35,7 @@ export const register = async (data) => {
 
 // Opsiyonel: Me (current user) fonksiyonu
 export const getMe = async (token) => {
-  const res = await fetch(`${API_BASE}/auth/me`, {
+  const res = await fetch(`${API_BASE}/api/auth/me`, {
     headers: { 
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}` 
