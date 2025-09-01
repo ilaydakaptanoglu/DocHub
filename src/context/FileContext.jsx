@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from "react";
-import * as api from "../api/files.js"; // API fonksiyonlarının olduğu dosya
-import * as folderApi from "../api/folders.js"; // 📌 Klasör API'si eklendi
+import * as api from "../api/files.js";
+import * as folderApi from "../api/folders.js";
 
 const FileContext = createContext();
 
@@ -11,44 +11,41 @@ export function FileProvider({ children }) {
     selectedId: null,
   });
 
-  const [filesCache, setFilesCache] = useState({}); // folderId -> items
+  const [filesCache, setFilesCache] = useState({});
   const [breadcrumbs, setBreadcrumbs] = useState([{ id: "root", name: "Kök" }]);
 
-  // Belirli bir klasörün içeriğini al (DOSYALAR + KLASÖRLER)
   const listChildren = async (folderId) => {
-    if (filesCache[folderId]) return filesCache[folderId];
+    const id = folderId || "root";
+    if (filesCache[id]) return filesCache[id];
 
     try {
-      // Hem dosyaları HEM klasörleri aynı anda getir
       const [files, folders] = await Promise.all([
-        api.getFolderChildren(folderId),
-        api.getFolders(folderId === "root" ? null : folderId)
+        api.getFolderChildren(id),
+        api.getFolders(id === "root" ? null : id),
       ]);
 
-      // Klasörleri frontend formatına dönüştür
       const formattedFolders = folders.map(folder => ({
         id: folder.id,
-        name: folder.folderName, // Backend'den gelen isim
+        name: folder.folderName,
         type: "folder",
         parentId: folder.parentId,
-        createdAt: folder.createdAt
+        createdAt: folder.createdAt,
       }));
 
-      // Dosyaları frontend formatına dönüştür
       const formattedFiles = files.map(file => ({
         id: file.id,
-        name: file.fileName, // Backend'den gelen isim
+        name: file.fileName,
         type: "file",
         contentType: file.contentType,
         size: file.size,
         folderId: file.folderId,
         uploadedAt: file.uploadedAt,
-        url: file.url
+        url: file.url,
       }));
 
       const combinedChildren = [...formattedFolders, ...formattedFiles];
 
-      setFilesCache((prev) => ({ ...prev, [folderId]: combinedChildren }));
+      setFilesCache(prev => ({ ...prev, [id]: combinedChildren }));
       return combinedChildren;
     } catch (err) {
       console.error("Klasör içerikleri alınamadı:", err);
@@ -69,7 +66,6 @@ export function FileProvider({ children }) {
   const addFiles = async (files) => {
     try {
       const uploaded = await api.uploadFiles(state.currentFolderId, files);
-      // cache güncelle - backend response formatını dönüştür
       const formattedUploads = uploaded.map(file => ({
         id: file.id,
         name: file.fileName,
@@ -78,15 +74,12 @@ export function FileProvider({ children }) {
         size: file.size,
         folderId: file.folderId,
         uploadedAt: file.uploadedAt,
-        url: file.url
+        url: file.url,
       }));
 
-      setFilesCache((prev) => ({
+      setFilesCache(prev => ({
         ...prev,
-        [state.currentFolderId]: [
-          ...(prev[state.currentFolderId] || []),
-          ...formattedUploads
-        ],
+        [state.currentFolderId]: [...(prev[state.currentFolderId] || []), ...formattedUploads],
       }));
     } catch (err) {
       console.error("Dosya yüklenemedi:", err);
@@ -97,23 +90,17 @@ export function FileProvider({ children }) {
   const createFolder = async (name) => {
     try {
       const folder = await api.createFolder(state.currentFolderId, name);
-      console.log("Oluşturulan klasör:", folder); // Response'u logla
-
-      // Backend response'unu frontend formatına dönüştür
       const newFolder = {
         id: folder.id,
-        name: folder.folderName, // Backend'den gelen isim
+        name: folder.folderName,
         type: "folder",
         parentId: folder.parentId,
-        createdAt: folder.createdAt
+        createdAt: folder.createdAt,
       };
 
-      setFilesCache((prev) => ({
+      setFilesCache(prev => ({
         ...prev,
-        [state.currentFolderId]: [
-          ...(prev[state.currentFolderId] || []),
-          newFolder
-        ],
+        [state.currentFolderId]: [...(prev[state.currentFolderId] || []), newFolder],
       }));
 
       return newFolder;
@@ -124,22 +111,14 @@ export function FileProvider({ children }) {
     }
   };
 
-  // 📌 DÜZELTME: id yerine item objesini al
   const deleteItem = async (item) => {
     try {
-      // Eğer item bir klasör ise klasör API'sini kullan
-      if (item.type === "folder") {
-        await folderApi.deleteFolder(item.id);
-        alert("Klasör ve içeriği başarıyla silindi!");
-      } else {
-        await api.deleteItem(item.id);
-        alert("Dosya başarıyla silindi!");
-      }
+      if (item.type === "folder") await folderApi.deleteFolder(item.id);
+      else await api.deleteItem(item.id);
 
-      // cache güncelle
-      setFilesCache((prev) => ({
+      setFilesCache(prev => ({
         ...prev,
-        [state.currentFolderId]: (prev[state.currentFolderId] || []).filter((i) => i.id !== item.id),
+        [state.currentFolderId]: (prev[state.currentFolderId] || []).filter(i => i.id !== item.id),
       }));
     } catch (err) {
       console.error("Silme işlemi başarısız:", err);
@@ -147,44 +126,31 @@ export function FileProvider({ children }) {
     }
   };
 
-  // 📌 DÜZELTME: id yerine item objesini al
   const openItem = async (item) => {
     try {
-      // Eğer öğe bir klasörse, dizini değiştir.
-      if (item.type === "folder") {
-        goTo(item.id, item.name);
-      } else if (item.type === "file") {
-        // Eğer öğe bir dosyaysa, URL'sini kullanarak yeni bir sekmede aç
-        window.open(item.url, "_blank");
-        console.log("Açılan dosya:", item.name);
-      }
+      if (item.type === "folder") goTo(item.id, item.name);
+      else if (item.type === "file") window.open(item.url, "_blank");
     } catch (err) {
       console.error("Öğe açılamadı:", err);
       alert("Öğe açılamadı: " + err.message);
     }
   };
 
-  const selected = () => {
-    return (filesCache[state.currentFolderId] || []).find((i) => i.id === state.selectedId);
-  };
+  const selected = () => (filesCache[state.currentFolderId] || []).find(i => i.id === state.selectedId);
 
-  const setView = (mode) => {
-    setState((prev) => ({ ...prev, viewMode: mode }));
-  };
+  const setView = (mode) => setState(prev => ({ ...prev, viewMode: mode }));
 
-  // 👇 Breadcrumbs için goTo fonksiyonu
   const goTo = (folderId, folderName) => {
-    if (folderId === null || folderId === "root") {
-      setState((prev) => ({ ...prev, currentFolderId: "root" }));
+    const id = folderId || "root";
+    setState(prev => ({ ...prev, currentFolderId: id }));
+
+    if (id === "root") {
       setBreadcrumbs([{ id: "root", name: "Kök" }]);
     } else {
-      setState((prev) => ({ ...prev, currentFolderId: folderId }));
-      setBreadcrumbs((prev) => {
-        const exists = prev.find((b) => b.id === folderId);
-        if (exists) {
-          return prev.slice(0, prev.indexOf(exists) + 1);
-        }
-        return [...prev, { id: folderId, name: folderName }];
+      setBreadcrumbs(prev => {
+        const exists = prev.find(b => b.id === id);
+        if (exists) return prev.slice(0, prev.indexOf(exists) + 1);
+        return [...prev, { id, name: folderName }];
       });
     }
   };
