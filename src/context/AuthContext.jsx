@@ -33,10 +33,17 @@ export function AuthProvider({ children }) {
     }
   };
 
- const register = async (username, email, password, confirmPassword) => {
+ const register = async (username, email, password, confirmPassword, firstName = "", lastName = "") => {
   setLoading(true);
   try {
-    const { token, user } = await authApi.register(username, email, password, confirmPassword);
+    const { token, user } = await authApi.register({
+      Username: username,
+      Email: email,
+      Password: password,
+      ConfirmPassword: confirmPassword,
+      FirstName: firstName,
+      LastName: lastName
+    });
     setToken(token);
     setUser(user);
     return user;
@@ -65,4 +72,5 @@ export function AuthProvider({ children }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
+
 
