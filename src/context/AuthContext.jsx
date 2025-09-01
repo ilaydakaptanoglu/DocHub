@@ -5,7 +5,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("token") || null);
-  const [user, setUser] = useState(() => {
+  const [user, setUser]   = useState(() => {
     const raw = localStorage.getItem("user");
     return raw ? JSON.parse(raw) : null;
   });
@@ -21,11 +21,10 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem("user");
   }, [user]);
 
-  // Login fonksiyonu
-  const login = async (email, password) => {
+  const login = async (username, password) => {
     setLoading(true);
     try {
-      const { token, user } = await authApi.login(email, password);
+      const { token, user } = await authApi.login({ username, password });
       setToken(token);
       setUser(user);
       return user;
@@ -34,11 +33,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Register fonksiyonu (ConfirmPassword ekli)
-  const register = async (name, email, password, confirmPassword) => {
+  const register = async ({ username, email, password, confirmPassword }) => {
     setLoading(true);
     try {
-      const { token, user } = await authApi.register(name, email, password, confirmPassword);
+      const { token, user } = await authApi.register({ username, email, password, confirmPassword });
       setToken(token);
       setUser(user);
       return user;
@@ -60,7 +58,7 @@ export function AuthProvider({ children }) {
     register,
     logout,
     isAuthenticated: !!token,
-    isAdmin: user?.role === "admin", // Admin kontrolü
+    isAdmin: user?.roles?.includes("admin"),
   }), [token, user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
