@@ -1,33 +1,3 @@
-import axios from "axios";
-
-const API = import.meta.env.VITE_API_BASE_URL;
-
-export const login = async ({ Username, Password }) => {
-  try {
-    const { data } = await axios.post(`${API}/auth/login`, { Username, Password });
-    return data; // { token, user }
-  } catch (err) {
-    console.error("Login failed:", err.response?.data || err.message);
-    throw err.response?.data || err;
-  }
-};
-
-export const register = async ({ Username, Email, Password, ConfirmPassword, FirstName, LastName }) => {
-  try {
-    const { data } = await axios.post(`${API}/auth/register`, {
-      Username,
-      Email,
-      Password,
-      ConfirmPassword,
-      FirstName,
-      LastName
-    });
-    return data; // { token, user }
-  } catch (err) {
-    console.error("Register failed:", err.response?.data || err.message);
-    throw err.response?.data || err;
-  }
-};
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 // Login fonksiyonu
@@ -79,5 +49,3 @@ export const getMe = async (token) => {
 
   return await res.json(); // user DTO
 };
-
-
