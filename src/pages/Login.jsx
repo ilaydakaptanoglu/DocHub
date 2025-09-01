@@ -5,14 +5,18 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function Login() {
   const { login, loading } = useAuth();
   const nav = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+
+  const [username, setUsername] = useState("");
+  const [password, setPass] = useState("");
 
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(email.trim(), password);
-      nav("/files");
+      const user = await login(username.trim(), password);
+      if (user) {
+        // Admin ise her yere erişim, user ise kendi dosyalar
+        nav("/files");
+      }
     } catch (err) {
       alert("Giriş başarısız: " + (err?.message || "Hata"));
     }
@@ -23,21 +27,19 @@ export default function Login() {
       <h2 style={{ marginBottom: 12 }}>Giriş Yap</h2>
       <form onSubmit={onSubmit} className="form">
         <label className="label">
-          E-posta
-          <input className="input" type="email" value={email}
-                 onChange={(e) => setEmail(e.target.value)} required />
+          Kullanıcı Adı
+          <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} required />
         </label>
         <label className="label">
           Şifre
-          <input className="input" type="password" value={password}
-                 onChange={(e) => setPassword(e.target.value)} required />
+          <input className="input" type="password" value={password} onChange={(e) => setPass(e.target.value)} required />
         </label>
         <button className="btn" type="submit" disabled={loading}>
           {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
         </button>
       </form>
       <div style={{ marginTop: 12, color: "var(--sub)" }}>
-        Hesabın yok mu? <Link to="/register">Kayıt ol</Link>
+        Hesabın yok mu? <Link to="/register">Kayıt Ol</Link>
       </div>
     </div>
   );
