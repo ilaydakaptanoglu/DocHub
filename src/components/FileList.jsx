@@ -31,13 +31,16 @@ export default function FileList({ items }) {
       </thead>
       <tbody>
         {items.map(item => (
-          <tr key={item.id} onClick={() => openItem(item)}>
+          <tr key={`${item.type}-${item.id}`} onClick={() => openItem(item)}>
             <td>{iconFor(item)}</td>
             <td>{item.name}</td>
             <td>{item.type === "folder" ? "Klasör" : item.contentType || "Dosya"}</td>
             <td>{item.type === "file" ? formatSize(item.size) : "-"}</td>
             <td>
-              <button className="delete-btn" onClick={(e) => handleDelete(e, item)}>
+              <button
+                className="delete-btn"
+                onClick={(e) => handleDelete(e, item)}
+              >
                 <FiTrash2 />
               </button>
             </td>

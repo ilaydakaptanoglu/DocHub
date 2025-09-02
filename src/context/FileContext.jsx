@@ -14,6 +14,19 @@ export function FileProvider({ children }) {
   const [filesCache, setFilesCache] = useState({});
   const [breadcrumbs, setBreadcrumbs] = useState([{ id: "root", name: "Kök" }]);
 
+  // 🔹 Boyut formatlama helper
+  function formatSize(size) {
+    if (!size) return "0 B";
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let i = 0;
+    let num = size;
+    while (num >= 1024 && i < units.length - 1) {
+      num /= 1024;
+      i++;
+    }
+    return `${num.toFixed(1)} ${units[i]}`;
+  }
+
   // Belirli bir klasörün içeriğini al (dosyalar + klasörler)
   const listChildren = async (folderId) => {
     if (filesCache[folderId]) return filesCache[folderId];
@@ -223,7 +236,8 @@ export function FileProvider({ children }) {
       selected,
       breadcrumbs,
       goTo,
-      getRecents, // 🔑 Home.jsx artık bu fonksiyonu çağırabilir
+      getRecents,
+      formatSize, // ✅ artık context üzerinden erişilebilir
     }}>
       {children}
     </FileContext.Provider>
