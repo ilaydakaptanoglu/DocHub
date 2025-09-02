@@ -1,10 +1,13 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import * as api from "../api/files.js";
 import * as folderApi from "../api/folders.js";
+import { useAuth } from "./AuthContext.jsx"; // AuthContext import
 
 const FileContext = createContext();
 
 export function FileProvider({ children }) {
+  const { user } = useAuth(); // user değişimini takip et
+
   const [state, setState] = useState({
     currentFolderId: "root",
     viewMode: "grid",
@@ -13,6 +16,11 @@ export function FileProvider({ children }) {
 
   const [filesCache, setFilesCache] = useState({});
   const [breadcrumbs, setBreadcrumbs] = useState([{ id: "root", name: "Kök" }]);
+
+  // 🔹 user değiştiğinde cache’i temizle
+  useEffect(() => {
+    setFilesCache({});
+  }, [user]);
 
   // 🔹 Boyut formatlama helper
   function formatSize(size) {
@@ -55,7 +63,8 @@ export function FileProvider({ children }) {
         uploadedAt: file.uploadedAt,
         lastOpenedAt: file.lastOpenedAt,
         url: file.url,
-        downloadUrl: file.downloadUrl
+        downloadUrl: file.downloadUrl,
+        userId: file.userId // backend’den userId gelmeli
       }));
 
       const combinedChildren = [...formattedFolders, ...formattedFiles];
@@ -83,7 +92,8 @@ export function FileProvider({ children }) {
         uploadedAt: file.uploadedAt,
         lastOpenedAt: file.lastOpenedAt,
         url: file.url,
-        downloadUrl: file.downloadUrl
+        downloadUrl: file.downloadUrl,
+        userId: file.userId
       }));
 
       setFilesCache(prev => ({
@@ -105,24 +115,12 @@ export function FileProvider({ children }) {
       if (item.type === "folder") {
         goTo(item.id, item.name);
       } else if (item.type === "file") {
-        // Yeni sekmede aç
         window.open(item.downloadUrl, "_blank");
-
-        // Backend'e LastOpenedAt güncellemesini bildir
-        try {
-          await api.markOpened(item.id);
-        } catch (err) {
-          console.error("LastOpenedAt güncellenemedi:", err);
-        }
-
-        // Cache güncelle (frontend tarafında hızlı görsel güncelleme)
+        try { await api.markOpened(item.id); } catch {}
         setFilesCache(prev => {
-          const updated = (prev[state.currentFolderId] || []).map(f => {
-            if (f.id === item.id && f.type === "file") {
-              return { ...f, lastOpenedAt: new Date().toISOString() };
-            }
-            return f;
-          });
+          const updated = (prev[state.currentFolderId] || []).map(f =>
+            f.id === item.id && f.type === "file" ? { ...f, lastOpenedAt: new Date().toISOString() } : f
+          );
           return { ...prev, [state.currentFolderId]: updated };
         });
       }
@@ -136,23 +134,11 @@ export function FileProvider({ children }) {
   const createFolder = async (name) => {
     try {
       const folder = await api.createFolder(state.currentFolderId, name);
-
-      const newFolder = {
-        id: folder.id,
-        name: folder.folderName,
-        type: "folder",
-        parentId: folder.parentId,
-        createdAt: folder.createdAt
-      };
-
+      const newFolder = { id: folder.id, name: folder.folderName, type: "folder", parentId: folder.parentId, createdAt: folder.createdAt };
       setFilesCache(prev => ({
         ...prev,
-        [state.currentFolderId]: [
-          ...(prev[state.currentFolderId] || []),
-          newFolder
-        ],
+        [state.currentFolderId]: [...(prev[state.currentFolderId] || []), newFolder],
       }));
-
       return newFolder;
     } catch (err) {
       console.error("Klasör oluşturulamadı:", err);
@@ -164,13 +150,8 @@ export function FileProvider({ children }) {
   // Silme işlemi
   const deleteItem = async (item) => {
     try {
-      if (item.type === "folder") {
-        await folderApi.deleteFolder(item.id);
-        alert("Klasör ve içeriği başarıyla silindi!");
-      } else {
-        await api.deleteItem(item.id);
-        alert("Dosya başarıyla silindi!");
-      }
+      if (item.type === "folder") await folderApi.deleteFolder(item.id);
+      else await api.deleteItem(item.id);
 
       setFilesCache(prev => ({
         ...prev,
@@ -182,14 +163,11 @@ export function FileProvider({ children }) {
     }
   };
 
-  // Seçili öğeyi döndür
   const selected = () => (filesCache[state.currentFolderId] || []).find(i => i.id === state.selectedId);
-
   const setView = (mode) => setState(prev => ({ ...prev, viewMode: mode }));
 
-  // Breadcrumbs navigation
   const goTo = (folderId, folderName) => {
-    if (folderId === null || folderId === "root") {
+    if (!folderId || folderId === "root") {
       setState(prev => ({ ...prev, currentFolderId: "root" }));
       setBreadcrumbs([{ id: "root", name: "Kök" }]);
     } else {
@@ -202,7 +180,6 @@ export function FileProvider({ children }) {
     }
   };
 
-  // Son açılan dosyaları getir
   const getRecents = async (limit = 8) => {
     try {
       const recents = await api.getRecents(limit);
@@ -216,7 +193,8 @@ export function FileProvider({ children }) {
         uploadedAt: file.uploadedAt,
         lastOpenedAt: file.lastOpenedAt,
         url: file.url,
-        downloadUrl: file.downloadUrl
+        downloadUrl: file.downloadUrl,
+        userId: file.userId
       }));
     } catch (err) {
       console.error("Son açılan dosyalar alınamadı:", err);
@@ -237,7 +215,7 @@ export function FileProvider({ children }) {
       breadcrumbs,
       goTo,
       getRecents,
-      formatSize, // ✅ artık context üzerinden erişilebilir
+      formatSize,
     }}>
       {children}
     </FileContext.Provider>
