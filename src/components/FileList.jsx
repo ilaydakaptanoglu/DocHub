@@ -1,27 +1,38 @@
 import { FiFileText, FiFilm, FiFolder, FiTrash2 } from "react-icons/fi";
 import { useFiles } from "../context/FileContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
-function iconFor(item){
-  if (item.kind === "folder") return <FiFolder />;
-  if ((item.mime||"").startsWith("video/")) return <FiFilm />;
-  if ((item.mime||"") === "application/pdf") return <FiFileText />;
+// Dosya türüne göre icon
+function iconFor(item) {
+  if (item.type === "folder") return <FiFolder />;
+  if ((item.contentType || "").startsWith("video/")) return <FiFilm />;
+  if ((item.contentType || "") === "application/pdf") return <FiFileText />;
   return <FiFileText />;
 }
 
-export default function FileList({ items, onOpen }) {
-  const { formatSize, deleteItem } = useFiles();
+export default function FileList({ items }) {
+  const { deleteItem, openItem, formatSize } = useFiles();
+  const { user, isAdmin } = useAuth(); // user ve admin kontrolü
 
-  const handleDelete = (e, id) => {
-    e.stopPropagation(); // satırın click'ini durdur
-    if (confirm("Bu öğeyi silmek istediğine emin misin?")) {
-      deleteItem(id);
+  const currentUserId = user?.Id || user?.id || null;
+
+  // Silme işlemi
+  const handleDelete = (e, item) => {
+    e.stopPropagation();
+    if (window.confirm("Bu öğeyi silmek istediğine emin misin?")) {
+      deleteItem(item);
     }
   };
+
+  // Admin tüm dosyaları görür, normal kullanıcı sadece kendi dosyalarını
+  const filteredItems = isAdmin
+    ? items
+    : items.filter(item => item.userId === currentUserId);
 
   return (
     <table className="list">
       <thead>
-        <tr className="row">
+        <tr>
           <th></th>
           <th>Ad</th>
           <th>Tür</th>
@@ -30,14 +41,17 @@ export default function FileList({ items, onOpen }) {
         </tr>
       </thead>
       <tbody>
-        {items.map(it => (
-          <tr key={it.id} className="row" onClick={() => onOpen(it.id)}>
-            <td>{iconFor(it)}</td>
-            <td>{it.name}</td>
-            <td>{it.kind === "folder" ? "Klasör" : (it.mime || "Dosya")}</td>
-            <td>{it.kind === "file" ? formatSize(it.size) : "-"}</td>
+        {filteredItems.map(item => (
+          <tr key={`${item.type}-${item.id}`} onClick={() => openItem(item)}>
+            <td>{iconFor(item)}</td>
+            <td>{item.name}</td>
+            <td>{item.type === "folder" ? "Klasör" : item.contentType || "Dosya"}</td>
+            <td>{item.type === "file" ? formatSize(item.size) : "-"}</td>
             <td>
-              <button className="delete-btn" onClick={(e) => handleDelete(e, it.id)}>
+              <button
+                className="delete-btn"
+                onClick={(e) => handleDelete(e, item)}
+              >
                 <FiTrash2 />
               </button>
             </td>

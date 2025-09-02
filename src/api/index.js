@@ -1,11 +1,36 @@
-import express from "express";
-import fileRoutes from "./files.js";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const app = express();
-app.use(express.json());
+/**
+ * Token eklenmiş ve kimlik doğrulaması yapılmış HTTP istekleri için yardımcı fonksiyon
+ * @param {string} url - İsteğin gönderileceği URL
+ * @param {object} [options={}] - fetch API seçenekleri
+ * @returns {Promise<Response>}
+ */
+export function authFetch(url, options = {}) {
+  const token = localStorage.getItem("token");
+  const headers = new Headers(options.headers || {});
 
-// Dosya yönetimi endpointleri
-app.use("/api/files", fileRoutes);
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  return fetch(`${BASE_URL}${url}`, { ...options, headers });
+}
+
+// Örnek: dosya yükleme
+export async function uploadFile(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await authFetch("/api/files/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Dosya yüklenirken hata oluştu: ${errorText}`);
+  }
+
+  return res.json();
+}

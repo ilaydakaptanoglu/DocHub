@@ -1,17 +1,7 @@
-// folders.js
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { authFetch } from "./index.js";
 
-/**
- * Belirli bir klasör ID'sine sahip klasörü siler.
- * @param {number} folderId - Silinecek klasörün ID'si.
- */
+// 📂 Klasör silme
 export const deleteFolder = async (folderId) => {
-    const res = await fetch(`${BASE_URL}/folders/${folderId}`, {
-        method: "DELETE"
-    });
-
-    if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Klasör silinemedi: ${errorText}`);
-    }
+  const res = await authFetch(`/api/folders/${folderId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`Klasör silinemedi: ${await res.text()}`);
 };

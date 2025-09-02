@@ -1,119 +1,74 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { authFetch } from "./index.js";
 
+// Klasörün altındaki dosya ve klasörleri getir
 export const getFolderChildren = async (folderId) => {
-  // "root" ve "null" string'lerini null integer'a çevir
   let parsedFolderId = folderId;
-  if (folderId === "root" || folderId === "null") {
-    parsedFolderId = null;
-  }
+  if (folderId === "root" || folderId === "null") parsedFolderId = null;
 
-  const res = await fetch(`${BASE_URL}/files?folderId=${parsedFolderId}`);
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Klasör içerikleri alınamadı: ${errorText}`);
-  }
+  const res = await authFetch(`/api/files?folderId=${parsedFolderId}`);
+  if (!res.ok) throw new Error(`Klasör içerikleri alınamadı: ${await res.text()}`);
   return res.json();
 };
 
+// Son açılan dosyalar
 export const getRecents = async (limit = 8) => {
-  const res = await fetch(`${BASE_URL}/files/recent?limit=${limit}`);
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Son açılan dosyalar alınamadı: ${errorText}`);
-  }
+  const res = await authFetch(`/api/files/recent?limit=${limit}`);
+  if (!res.ok) throw new Error(`Son açılan dosyalar alınamadı: ${await res.text()}`);
   return res.json();
 };
 
+// Dosya yükleme
 export const uploadFiles = async (folderId, files) => {
   const formData = new FormData();
-  
-  // Tüm dosyaları ekle (forEach yerine for loop)
-  for (let i = 0; i < files.length; i++) {
-    formData.append("files", files[i]);
-  }
-  
-  // "root" string'ini null'a çevir
+  for (let i = 0; i < files.length; i++) formData.append("files", files[i]);
   if (folderId && folderId !== "root" && folderId !== "null") {
     formData.append("folderId", folderId);
   }
 
-  const res = await fetch(`${BASE_URL}/files/upload`, {
-    method: "POST",
-    body: formData,
-    // NOT: FormData ile Content-Type header'ı EKLEMEYİN, browser otomatik ayarlar
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Dosya yüklenemedi: ${errorText}`);
-  }
+  const res = await authFetch("/api/files/upload", { method: "POST", body: formData });
+  if (!res.ok) throw new Error(`Dosya yüklenemedi: ${await res.text()}`);
   return res.json();
 };
 
+// Dosya veya klasör silme
 export const deleteItem = async (id) => {
-  const res = await fetch(`${BASE_URL}/files/${id}`, { 
-    method: "DELETE" 
-  });
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Silme işlemi başarısız: ${errorText}`);
-  }
+  const res = await authFetch(`/api/files/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`Silme işlemi başarısız: ${await res.text()}`);
 };
 
+// Tek bir dosyayı getir
 export const getItem = async (id) => {
-  const res = await fetch(`${BASE_URL}/files/${id}`);
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Dosya açılamadı: ${errorText}`);
-  }
+  const res = await authFetch(`/api/files/${id}`);
+  if (!res.ok) throw new Error(`Dosya açılamadı: ${await res.text()}`);
   return res.json();
 };
 
+// Yeni klasör oluştur
 export const createFolder = async (parentId, name) => {
-  // "root" string'ini null integer'a çevir
   const parsedParentId = parentId === "root" ? null : parentId;
 
-  const res = await fetch(`${BASE_URL}/folders`, {
+  const res = await authFetch("/api/folders", {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json" 
-    },
-    body: JSON.stringify({
-      folderName: name,
-      parentId: parsedParentId
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ folderName: name, parentId: parsedParentId }),
   });
 
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Klasör oluşturulamadı: ${errorText}`);
-  }
-
+  if (!res.ok) throw new Error(`Klasör oluşturulamadı: ${await res.text()}`);
   return res.json();
 };
 
-// 📌 YENİ EKLENEN FONKSİYONLAR:
-
+// Belirli klasördeki klasörleri getir
 export const getFolders = async (parentId = null) => {
   const params = new URLSearchParams();
-  if (parentId !== null && parentId !== undefined) {
-    params.append('parentId', parentId);
-  }
+  if (parentId !== null && parentId !== undefined) params.append("parentId", parentId);
 
-  const res = await fetch(`${BASE_URL}/folders?${params}`);
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Klasörler alınamadı: ${errorText}`);
-  }
+  const res = await authFetch(`/api/folders?${params.toString()}`);
+  if (!res.ok) throw new Error(`Klasörler alınamadı: ${await res.text()}`);
   return res.json();
 };
 
-export const markAsOpened = async (id) => {
-  const res = await fetch(`${BASE_URL}/files/open/${id}`, {
-    method: "PATCH"
-  });
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Dosya açılma durumu güncellenemedi: ${errorText}`);
-  }
+// Dosya açıldığında durum güncelle
+export const markOpened = async (id) => {
+  const res = await authFetch(`/api/files/open/${id}`, { method: "PATCH" });
+  if (!res.ok) throw new Error(`Dosya açılma durumu güncellenemedi: ${await res.text()}`);
 };
